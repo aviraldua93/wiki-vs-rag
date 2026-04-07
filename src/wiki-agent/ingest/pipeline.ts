@@ -60,13 +60,18 @@ function buildCompilePrompt(doc: CorpusDocument): ChatMessage[] {
   return [
     {
       role: 'system',
-      content: `You are a wiki compiler. Convert the following source document into a well-structured wiki page with YAML frontmatter. 
+      content: `You are a wiki compiler following the Karpathy LLM Knowledge Base methodology.
+Convert the following source document into a well-structured wiki page with YAML frontmatter.
 
 Requirements:
 - Use [[WikiLinks]] to reference related concepts, entities, and other pages (Obsidian-compatible format)
 - Extract and link to key entities (people, organizations, projects, technologies)
 - Extract and link to key concepts (ideas, frameworks, patterns, methodologies)
 - Produce clear, well-organized content with headings
+- Include inline source citations using [Source: ${doc.relativePath}] format for key claims
+- Flag contradictions with existing knowledge using the format:
+  > CONTRADICTION: [existing claim] vs [new claim] from [Source: ${doc.relativePath}]
+- Each page should be self-contained but richly cross-linked
 
 Follow this YAML frontmatter schema exactly:
 ---
@@ -74,11 +79,13 @@ title: "Page Title"
 type: source
 tags: [relevant, tags]
 sources: [${doc.relativePath}]
+source_count: 1
+status: draft
 created: ${today}
 updated: ${today}
 ---
 
-Content with [[WikiLinks]] for cross-references.`,
+Content with [[WikiLinks]] for cross-references and [Source: filename.md] citations.`,
     },
     {
       role: 'user',
@@ -178,6 +185,10 @@ export async function ingestDocument(
     if (!page.sources.includes(doc.relativePath)) {
       page.sources.push(doc.relativePath);
     }
+
+    // Set Karpathy metadata fields
+    page.source_count = page.sources.length;
+    page.status = 'draft';
 
     // Index in FTS5
     storage.upsertPage(page);

@@ -10,6 +10,9 @@
 /** Allowed wiki page types matching the YAML frontmatter schema. */
 export type WikiPageType = 'source' | 'entity' | 'concept' | 'synthesis';
 
+/** Page lifecycle status per Karpathy methodology. */
+export type WikiPageStatus = 'draft' | 'reviewed' | 'needs_update';
+
 /** A compiled wiki page with YAML frontmatter fields + content. */
 export interface WikiPage {
   /** Page title (appears in frontmatter and as heading) */
@@ -30,6 +33,10 @@ export interface WikiPage {
   updated: string;
   /** File path relative to wiki root (e.g., "sources/api-design.md") */
   filePath?: string;
+  /** Number of distinct source documents backing this page */
+  source_count?: number;
+  /** Page lifecycle status (Karpathy methodology) */
+  status?: WikiPageStatus;
 }
 
 // ── Query / Answer Types ─────────────────────────────────────────

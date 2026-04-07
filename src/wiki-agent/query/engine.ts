@@ -13,7 +13,10 @@ import type {
   WikiPage,
 } from '../../types.ts';
 import type { WikiFTS5Storage, SearchResult } from '../wiki/fts5-storage.ts';
+import { serializeWikiPage } from '../wiki/page.ts';
 import { createLogger } from '../../logger.ts';
+import { writeFile, mkdir } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
 
 const log = createLogger('query-engine');
 
@@ -23,11 +26,14 @@ export interface QueryOptions {
   maxPages?: number;
   /** Model to use for synthesis */
   model?: string;
+  /** If set, file the answer back as a synthesis page in this wiki directory */
+  fileBackDir?: string;
 }
 
 const DEFAULT_OPTIONS: Required<QueryOptions> = {
   maxPages: 5,
   model: 'gpt-4o-mini',
+  fileBackDir: '',
 };
 
 /**
@@ -136,6 +142,34 @@ export async function executeQuery(
     { queryId: query.id, latencyMs: answer.latencyMs, citationCount: citations.length },
     'Query completed',
   );
+
+  // Compounding loop: file answer back as a synthesis page (Karpathy method)
+  if (opts.fileBackDir) {
+    try {
+      const slug = query.id.replace(/[^a-z0-9-]/gi, '-').toLowerCase();
+      const synthesisPage: WikiPage = {
+        title: `Answer: ${query.text.slice(0, 80)}`,
+        type: 'synthesis',
+        tags: ['query-answer', 'auto-generated'],
+        sources: citations.map((c) => c.source),
+        source_count: citations.length,
+        status: 'draft',
+        content: `# ${query.text}\n\n${response.content}`,
+        wikilinks: citations.map((c) => c.source),
+        created: new Date().toISOString().split('T')[0],
+        updated: new Date().toISOString().split('T')[0],
+        filePath: `syntheses/${slug}.md`,
+      };
+      storage.upsertPage(synthesisPage);
+
+      const outPath = join(opts.fileBackDir, `syntheses/${slug}.md`);
+      await mkdir(dirname(outPath), { recursive: true });
+      await writeFile(outPath, serializeWikiPage(synthesisPage), 'utf-8');
+      log.info({ queryId: query.id, outPath }, 'Filed answer back as synthesis page');
+    } catch (err) {
+      log.warn({ queryId: query.id, err }, 'Failed to file answer back');
+    }
+  }
 
   return answer;
 }

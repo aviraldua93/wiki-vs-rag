@@ -15,6 +15,52 @@ import { createLogger } from '../../logger.ts';
 const log = createLogger('wiki-generators');
 
 /**
+ * Generate or append to the wiki/log.md — an append-only chronological log
+ * per Karpathy's methodology.
+ *
+ * Format: ## [YYYY-MM-DD] action | Description
+ */
+export async function appendToLog(
+  entries: Array<{ action: string; description: string }>,
+  wikiDir: string,
+): Promise<void> {
+  const logPath = join(wikiDir, 'log.md');
+  const now = new Date().toISOString().split('T')[0];
+
+  let existing = '';
+  try {
+    const { readFile } = await import('node:fs/promises');
+    existing = await readFile(logPath, 'utf-8');
+  } catch {
+    // File doesn't exist yet — create with header
+    existing = `---
+title: "Activity Log"
+type: synthesis
+tags: [log, auto-generated]
+sources: []
+created: ${now}
+updated: ${now}
+---
+
+# Wiki Activity Log
+
+Append-only chronological log of all wiki operations.
+
+`;
+  }
+
+  const newEntries = entries
+    .map((e) => `## [${now}] ${e.action} | ${e.description}`)
+    .join('\n\n');
+
+  const updated = existing.trimEnd() + '\n\n' + newEntries + '\n';
+
+  await mkdir(wikiDir, { recursive: true });
+  await writeFile(logPath, updated, 'utf-8');
+  log.info({ entryCount: entries.length }, 'Appended to log.md');
+}
+
+/**
  * Generate the master index.md page listing all compiled wiki pages.
  */
 export async function generateIndexPage(

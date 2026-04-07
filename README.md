@@ -65,20 +65,33 @@ bun run benchmark:report
 ```
 corpus/ → loader → extractor → compiler → wiki/
                                           ├── index.md
+                                          ├── log.md (append-only activity log)
                                           ├── sources/
                                           ├── entities/
                                           ├── concepts/
                                           └── syntheses/
 ```
 
+Following Karpathy's exact methodology:
+- YAML frontmatter with `source_count` and `status` (draft|reviewed|needs_update)
+- `[Source: filename.md]` inline citations for every claim
+- `> CONTRADICTION:` flags when new data conflicts with existing wiki content
+- Append-only `log.md` for all operations
+
 ### Lint (self-healing)
 - **Structural:** orphans, broken links, missing frontmatter, stale pages
+- **Uncited claims:** pages without source attribution
+- **Missing cross-references:** related pages that should link to each other
 - **Semantic:** contradictions, data gaps (LLM-powered)
 
 ### Query (answer with citations)
 ```
 question → router (index scan) → select pages → synthesizer → answer with [[citations]]
+                                                             → file back as syntheses/ page
 ```
+
+Query answers are optionally filed back into `syntheses/` — the compounding loop that makes
+the wiki grow smarter with use.
 
 ## Benchmark Dimensions
 
@@ -109,6 +122,21 @@ Both systems expose A2A interfaces:
 | RAG integration | A2A protocol → rag-a2a |
 | Evaluation | RAGAS + LLM-as-Judge |
 | Testing | Bun test + Playwright |
+
+## Known Limitations (Karpathy Method)
+
+Per Karpathy's own analysis, the wiki compilation approach has inherent trade-offs:
+
+| Limitation | Impact |
+|-----------|--------|
+| Context ceiling | ~400K words practical limit for total wiki size |
+| Error compounding | LLM compilation errors propagate across interlinked pages |
+| Hallucination risk | Compiled pages may contain LLM-fabricated claims |
+| Cost per source | $2-5 per document compilation (GPT-4 class models) |
+| No enterprise scale | Single-user, single-model architecture |
+| Single-model blind spots | One LLM's biases shape the entire wiki |
+
+This benchmark measures these trade-offs quantitatively against RAG.
 
 ## Portfolio Context
 

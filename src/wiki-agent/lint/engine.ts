@@ -143,6 +143,46 @@ export function lintStructural(
     });
   }
 
+  // Uncited claims: source/entity/concept pages with empty sources array
+  for (const title of allTitles) {
+    const page = storage.getPage(title);
+    if (!page) continue;
+    if (page.type !== 'synthesis' && page.sources.length === 0) {
+      issues.push({
+        page: title,
+        severity: 'warning',
+        category: 'missing-field',
+        message: 'Page has no source citations — all claims should trace back to a source document',
+        suggestion: `Add [Source: filename.md] citations and populate the 'sources' frontmatter field`,
+      });
+    }
+  }
+
+  // Missing cross-references: pages that share tags but don't link to each other
+  const titleList = [...allTitles];
+  for (let i = 0; i < titleList.length; i++) {
+    const pageA = storage.getPage(titleList[i]);
+    if (!pageA) continue;
+    for (let j = i + 1; j < titleList.length; j++) {
+      const pageB = storage.getPage(titleList[j]);
+      if (!pageB) continue;
+      const sharedTags = pageA.tags.filter((t) => pageB.tags.includes(t));
+      if (sharedTags.length >= 2) {
+        const aLinksB = pageA.wikilinks.includes(pageB.title);
+        const bLinksA = pageB.wikilinks.includes(pageA.title);
+        if (!aLinksB && !bLinksA) {
+          issues.push({
+            page: pageA.title,
+            severity: 'info',
+            category: 'semantic',
+            message: `Missing cross-reference: '${pageA.title}' and '${pageB.title}' share tags [${sharedTags.join(', ')}] but don't link to each other`,
+            suggestion: `Add [[${pageB.title}]] wikilink to '${pageA.title}' or vice versa`,
+          });
+        }
+      }
+    }
+  }
+
   return issues;
 }
 

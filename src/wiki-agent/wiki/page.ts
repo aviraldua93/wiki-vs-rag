@@ -5,7 +5,7 @@
  */
 
 import matter from 'gray-matter';
-import type { WikiPage, WikiPageType } from '../../types.ts';
+import type { WikiPage, WikiPageType, WikiPageStatus } from '../../types.ts';
 import { createLogger } from '../../logger.ts';
 
 const log = createLogger('wiki-page');
@@ -67,6 +67,12 @@ export function parseWikiPage(raw: string, filePath?: string): WikiPage | null {
     const created = typeof data.created === 'string' ? data.created : now;
     const updated = typeof data.updated === 'string' ? data.updated : now;
 
+    const VALID_STATUSES = new Set(['draft', 'reviewed', 'needs_update']);
+    const rawStatus = typeof data.status === 'string' ? data.status : undefined;
+    const status: WikiPageStatus | undefined =
+      rawStatus && VALID_STATUSES.has(rawStatus) ? (rawStatus as WikiPageStatus) : undefined;
+    const source_count = typeof data.source_count === 'number' ? data.source_count : undefined;
+
     return {
       title,
       type,
@@ -77,6 +83,8 @@ export function parseWikiPage(raw: string, filePath?: string): WikiPage | null {
       created,
       updated,
       filePath,
+      source_count,
+      status,
     };
   } catch (err) {
     log.error({ filePath, err }, 'Failed to parse wiki page');
@@ -88,11 +96,13 @@ export function parseWikiPage(raw: string, filePath?: string): WikiPage | null {
  * Serialize a WikiPage back to Markdown with YAML frontmatter.
  */
 export function serializeWikiPage(page: WikiPage): string {
-  const frontmatter = {
+  const frontmatter: Record<string, unknown> = {
     title: page.title,
     type: page.type,
     tags: page.tags,
     sources: page.sources,
+    source_count: page.source_count ?? page.sources.length,
+    status: page.status ?? 'draft',
     created: page.created,
     updated: page.updated,
   };
