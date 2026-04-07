@@ -1,0 +1,49 @@
+{
+  "name": "wiki-vs-rag",
+  "version": "0.1.0",
+  "description": "Head-to-head benchmark: RAG vs Karpathy-style LLM Wiki Knowledge Compilation",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/server/index.ts",
+    "build": "bun build src/server/index.ts --outdir dist --target bun",
+    "test": "bun test",
+    "test:unit": "bun test tests/unit",
+    "test:e2e": "bun test tests/e2e",
+    "ingest": "bun run src/wiki-agent/ingest/cli.ts",
+    "lint:wiki": "bun run src/wiki-agent/lint/cli.ts",
+    "query": "bun run src/wiki-agent/query/cli.ts",
+    "benchmark": "bun run src/benchmark/cli.ts",
+    "benchmark:report": "bun run src/benchmark/reporter.ts"
+  },
+  "dependencies": {
+    "openai": "^4.73.0",
+    "pino": "^9.6.0",
+    "sonic-boom": "^4.2.0",
+    "uuid": "^11.1.0",
+    "better-sqlite3": "^11.7.0",
+    "gray-matter": "^4.0.3",
+    "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.7.0"
+  },
+  "author": "Aviral Dua",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aviraldua93/wiki-vs-rag.git"
+  },
+  "keywords": [
+    "rag",
+    "wiki",
+    "knowledge-base",
+    "benchmark",
+    "llm",
+    "karpathy",
+    "a2a",
+    "evaluation"
+  ]
+}

@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+wiki/sources/*
+wiki/entities/*
+wiki/concepts/*
+wiki/syntheses/*
+wiki/index.md
+wiki/overview.md
+!wiki/**/.gitkeep
+results/run-*/
+.crews/artifacts/
+.DS_Store
+Thumbs.db
