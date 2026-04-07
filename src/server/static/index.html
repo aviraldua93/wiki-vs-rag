@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wiki vs RAG — Benchmark Dashboard</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent-wiki: #58a6ff;
+      --accent-rag: #f78166;
+      --accent-tie: #8b949e;
+      --success: #3fb950;
+      --error: #f85149;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.25rem; margin-bottom: 0.75rem; color: var(--text-muted); }
+    h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+    .header { text-align: center; margin-bottom: 2rem; }
+    .header p { color: var(--text-muted); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    .card .label { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.25rem; }
+    .card .value { font-size: 2rem; font-weight: 600; }
+    .wiki-color { color: var(--accent-wiki); }
+    .rag-color { color: var(--accent-rag); }
+    .tie-color { color: var(--accent-tie); }
+    .score-bar {
+      display: flex; height: 28px; border-radius: 6px; overflow: hidden;
+      background: var(--border); margin: 0.5rem 0;
+    }
+    .score-bar .wiki { background: var(--accent-wiki); }
+    .score-bar .rag { background: var(--accent-rag); }
+    .score-bar .tie { background: var(--accent-tie); }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.625rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 500; font-size: 0.875rem; }
+    td { font-size: 0.875rem; }
+    .winner-wiki { color: var(--accent-wiki); font-weight: 600; }
+    .winner-rag { color: var(--accent-rag); font-weight: 600; }
+    .winner-tie { color: var(--accent-tie); }
+    .empty-state {
+      text-align: center; padding: 3rem; color: var(--text-muted);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    }
+    .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+    .category-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem;
+    }
+    .category-card .name { font-weight: 600; margin-bottom: 0.25rem; text-transform: capitalize; }
+    #loading { text-align: center; padding: 2rem; color: var(--text-muted); }
+    .refresh-btn {
+      background: var(--surface); color: var(--text); border: 1px solid var(--border);
+      padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem;
+    }
+    .refresh-btn:hover { border-color: var(--accent-wiki); }
+    .meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📚 Wiki vs 🔍 RAG</h1>
+    <p>Head-to-head benchmark: Karpathy-style Wiki Knowledge Compilation vs Retrieval-Augmented Generation</p>
+    <button class="refresh-btn" onclick="loadResults()" style="margin-top: 1rem;">↻ Refresh</button>
+  </div>
+
+  <div id="loading">Loading benchmark results...</div>
+  <div id="dashboard" style="display: none;">
+    <div id="summary-cards" class="grid"></div>
+    <div id="score-section" class="card" style="margin-bottom: 2rem;"></div>
+    <div id="category-section" class="card" style="margin-bottom: 2rem;"></div>
+    <div id="results-table" class="card"></div>
+  </div>
+  <div id="empty" class="empty-state" style="display: none;">
+    <h2>No benchmark results yet</h2>
+    <p>Run a benchmark with: <code>bun run benchmark</code></p>
+  </div>
+
+  <script>
+    async function loadResults() {
+      try {
+        const resp = await fetch('/api/results');
+        const runs = await resp.json();
+        if (!runs.length) {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('dashboard').style.display = 'none';
+          document.getElementById('empty').style.display = 'block';
+          return;
+        }
+        renderDashboard(runs[0]); // show most recent run
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Error loading results: ' + err.message;
+      }
+    }
+
+    function renderDashboard(run) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('empty').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+
+      const s = run.summary || {};
+      const total = s.totalQueries || 0;
+
+      // Summary cards
+      document.getElementById('summary-cards').innerHTML = `
+        <div class="card">
+          <div class="label">Total Queries</div>
+          <div class="value">${total}</div>
+          <div class="meta">Run: ${run.id?.slice(0,8) ?? 'N/A'}</div>
+        </div>
+        <div class="card">
+          <div class="label">Wiki Wins</div>
+          <div class="value wiki-color">${s.wikiWins ?? 0}</div>
+          <div class="meta">${total ? ((s.wikiWins / total) * 100).toFixed(1) : 0}%</div>
+        </div>
+        <div class="card">
+          <div class="label">RAG Wins</div>
+          <div class="value rag-color">${s.ragWins ?? 0}</div>
+          <div class="meta">${total ? ((s.ragWins / total) * 100).toFixed(1) : 0}%</div>
+        </div>
+        <div class="card">
+          <div class="label">Ties</div>
+          <div class="value tie-color">${s.ties ?? 0}</div>
+          <div class="meta">${total ? ((s.ties / total) * 100).toFixed(1) : 0}%</div>
+        </div>
+        <div class="card">
+          <div class="label">Avg Wiki Latency</div>
+          <div class="value">${(s.avgWikiLatencyMs ?? 0).toFixed(0)}ms</div>
+        </div>
+        <div class="card">
+          <div class="label">Avg RAG Latency</div>
+          <div class="value">${(s.avgRagLatencyMs ?? 0).toFixed(0)}ms</div>
+        </div>
+      `;
+
+      // Score bar
+      const wPct = total ? (s.wikiWins / total * 100).toFixed(1) : 0;
+      const rPct = total ? (s.ragWins / total * 100).toFixed(1) : 0;
+      const tPct = total ? (s.ties / total * 100).toFixed(1) : 0;
+      document.getElementById('score-section').innerHTML = `
+        <h3>Win Distribution</h3>
+        <div class="score-bar">
+          <div class="wiki" style="width: ${wPct}%" title="Wiki: ${wPct}%"></div>
+          <div class="rag" style="width: ${rPct}%" title="RAG: ${rPct}%"></div>
+          <div class="tie" style="width: ${tPct}%" title="Tie: ${tPct}%"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+          <span class="wiki-color">Wiki ${wPct}%</span>
+          <span class="tie-color">Tie ${tPct}%</span>
+          <span class="rag-color">RAG ${rPct}%</span>
+        </div>
+      `;
+
+      // Category breakdown
+      const cats = s.byCategory || {};
+      const catCards = Object.entries(cats).map(([name, c]) => `
+        <div class="category-card">
+          <div class="name">${name}</div>
+          <div><span class="wiki-color">Wiki: ${c.wikiWins}</span> | <span class="rag-color">RAG: ${c.ragWins}</span> | <span class="tie-color">Tie: ${c.ties}</span></div>
+        </div>
+      `).join('');
+      document.getElementById('category-section').innerHTML = `
+        <h3>By Category</h3>
+        <div class="category-grid">${catCards || '<div class="meta">No category data</div>'}</div>
+      `;
+
+      // Results table
+      const rows = (run.results || []).map(r => {
+        const wClass = r.winner === 'wiki' ? 'winner-wiki' : r.winner === 'rag' ? 'winner-rag' : 'winner-tie';
+        const wj = r.wikiJudgeScores || {};
+        const rj = r.ragJudgeScores || {};
+        return `<tr>
+          <td>${r.query?.text?.slice(0, 60) ?? 'N/A'}${(r.query?.text?.length > 60) ? '...' : ''}</td>
+          <td>${r.query?.category ?? '-'}</td>
+          <td>${(wj.correctness ?? 0).toFixed(2)}</td>
+          <td>${(rj.correctness ?? 0).toFixed(2)}</td>
+          <td>${r.wikiAnswer?.latencyMs ?? 0}ms</td>
+          <td>${r.ragAnswer?.latencyMs ?? 0}ms</td>
+          <td class="${wClass}">${r.winner ?? '-'}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('results-table').innerHTML = `
+        <h3>Per-Question Results</h3>
+        <table>
+          <thead>
+            <tr><th>Question</th><th>Category</th><th>Wiki Score</th><th>RAG Score</th><th>Wiki Latency</th><th>RAG Latency</th><th>Winner</th></tr>
+          </thead>
+          <tbody>${rows || '<tr><td colspan="7" style="text-align:center; color: var(--text-muted);">No results</td></tr>'}</tbody>
+        </table>
+      `;
+    }
+
+    loadResults();
+  </script>
+</body>
+</html>

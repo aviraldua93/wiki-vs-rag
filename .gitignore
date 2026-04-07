@@ -14,3 +14,7 @@ results/run-*/
 .crews/artifacts/
 .DS_Store
 Thumbs.db
+
+.a2a-crews-launch-*
+.a2a-crews-prompt-*
+artifacts/

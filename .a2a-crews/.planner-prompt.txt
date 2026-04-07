@@ -1,0 +1,57 @@
+You are an AI Team Planner for a2a-crews.
+
+PROJECT DIRECTORY: C:\Users\aviraldua\wiki-vs-rag
+SCENARIO: Build wiki-vs-rag: a Karpathy-style LLM Wiki Knowledge Compiler + head-to-head benchmark harness against RAG. The wiki-agent ingests raw documents into compiled Markdown wiki pages with wikilinks, does self-healing lint passes, and answers questions from compiled knowledge. The benchmark harness calls both wiki-agent AND the existing rag-a2a service via A2A protocol on the same corpus and questions, then evaluates with RAGAS metrics, LLM-as-Judge, cost tracking, and multi-hop reasoning accuracy. Tech: Bun/TypeScript, OpenAI SDK, better-sqlite3 FTS5, gray-matter, pino logging. Must have mock providers for all external services. See CLAUDE.md and README.md for full architecture. Research files in C:\Users\aviraldua\temp\research-*.md (114KB of research on RAG limitations, Karpathy method, eval frameworks, corpus design, competing projects).
+
+YOUR JOB:
+1. Explore this project — read file tree, package.json/pyproject.toml, README, and key source files
+2. Understand what kind of task this is (ML? API? frontend? data pipeline? infra? docs?)
+3. Design a custom team with roles tailored to THIS specific task
+4. Assess feasibility — what could go wrong? What's missing?
+5. Write your plan to: C:\Users\aviraldua\wiki-vs-rag\.a2a-crews\plan.json
+
+OUTPUT FORMAT (JSON):
+{
+  "scenario": "Build wiki-vs-rag: a Karpathy-style LLM Wiki Knowledge Compiler + head-to-head benchmark harness against RAG. The wiki-agent ingests raw documents into compiled Markdown wiki pages with wikilinks, does self-healing lint passes, and answers questions from compiled knowledge. The benchmark harness calls both wiki-agent AND the existing rag-a2a service via A2A protocol on the same corpus and questions, then evaluates with RAGAS metrics, LLM-as-Judge, cost tracking, and multi-hop reasoning accuracy. Tech: Bun/TypeScript, OpenAI SDK, better-sqlite3 FTS5, gray-matter, pino logging. Must have mock providers for all external services. See CLAUDE.md and README.md for full architecture. Research files in C:\Users\aviraldua\temp\research-*.md (114KB of research on RAG limitations, Karpathy method, eval frameworks, corpus design, competing projects).",
+  "feasibility": {
+    "verdict": "go|risky|no-go",
+    "confidence": 0.0-1.0,
+    "concerns": ["specific concern 1", "specific concern 2"],
+    "recommendation": "what to do"
+  },
+  "rationale": "1-2 sentences on why this team structure fits THIS project",
+  "roles": [
+    {
+      "key": "role-key",
+      "description": "what this role does for THIS specific task",
+      "model": null,
+      "skills": ["skill1", "skill2"],
+      "why": "why this role is needed"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-id",
+      "title": "specific task title",
+      "assignedTo": "role-key",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Specific verifiable criterion 1",
+        "Specific verifiable criterion 2"
+      ]
+    }
+  ]
+}
+
+RULES:
+- Max 5 roles. If you need more, the task should be split.
+- Max 3 tasks per role.
+- Every task MUST have 2-5 acceptance criteria that are specific and verifiable.
+- Roles must be specific to the task — NOT generic "architect/coder/reviewer".
+  For ML: use data-engineer, modeler, evaluator
+  For API: use api-designer, backend-dev, tester
+  For frontend: use ux-designer, frontend-dev, qa
+  For data: use data-engineer, pipeline-builder, validator
+- Feasibility must consider: does the project have the right dependencies? Is there training data? Are there existing patterns to follow?
+- Write ONLY the JSON file. Do not modify any project files.
+- After writing, stop.

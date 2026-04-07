@@ -1,0 +1,234 @@
+{
+  "scenario": "Build wiki-vs-rag: a Karpathy-style LLM Wiki Knowledge Compiler + head-to-head benchmark harness against RAG. The wiki-agent ingests raw documents into compiled Markdown wiki pages with wikilinks, does self-healing lint passes, and answers questions from compiled knowledge. The benchmark harness calls both wiki-agent AND the existing rag-a2a service via A2A protocol on the same corpus and questions, then evaluates with RAGAS metrics, LLM-as-Judge, cost tracking, and multi-hop reasoning accuracy. Tech: Bun/TypeScript, OpenAI SDK, better-sqlite3 FTS5, gray-matter, pino logging. Must have mock providers for all external services. See CLAUDE.md and README.md for full architecture. Research files in C:\\Users\\aviraldua\\temp\\research-*.md (114KB of research on RAG limitations, Karpathy method, eval frameworks, corpus design, competing projects).",
+  "feasibility": {
+    "verdict": "go",
+    "confidence": 0.80,
+    "concerns": [
+      "Entire codebase is greenfield — 20+ modules must be built from scratch with zero existing source code",
+      "RAGAS metrics are typically a Python library (ragas); implementing faithfulness/context-precision scoring from scratch in TypeScript requires careful prompt engineering",
+      "rag-a2a external service must be running for real benchmarks — all dev/testing depends on robust mock providers",
+      "Wiki compilation quality is highly sensitive to prompt design — poor prompts produce unusable wiki pages with bad wikilinks and missing cross-references",
+      "Research file research-karpathy-wiki.md is only 1.8KB vs 20KB+ for others — Karpathy method implementation details may be thin"
+    ],
+    "recommendation": "Proceed with a foundation-first approach. Build shared types, config, and mock providers first so all parallel workstreams can develop and test independently. Implement RAGAS metrics as LLM-as-Judge evaluations (prompt-based) rather than trying to port the Python ragas library. Prioritize the wiki-agent pipeline and test corpus creation as the critical path."
+  },
+  "rationale": "This project is a data-processing pipeline (ingest→compile→lint→query) paired with an evaluation harness — it needs specialists for the novel wiki compilation engine, the benchmark/metrics system, protocol integration, corpus/test authoring, and shared infrastructure. Five roles map to the five architectural layers in CLAUDE.md, with clear dependency ordering: foundation → wiki-agent + corpus in parallel → benchmark + A2A → integration.",
+  "roles": [
+    {
+      "key": "foundation-dev",
+      "description": "Builds the shared infrastructure all other modules depend on: TypeScript types for WikiPage/Query/Answer/BenchmarkResult, environment-based config, pino logger factory, corpus document loader, and critically the MockLLM and MockRAGClient providers that enable zero-API-key testing across all workstreams.",
+      "model": null,
+      "skills": ["typescript", "bun-runtime", "dependency-injection", "pino-logging", "better-sqlite3"],
+      "why": "Every module in this project depends on shared types, config, and mock providers. Without this foundation layer, no other role can write testable code. The mock providers are especially critical because the CLAUDE.md mandates zero-API-key testing."
+    },
+    {
+      "key": "wiki-compiler-dev",
+      "description": "Implements the novel Karpathy-style wiki compilation engine: document ingestion pipeline (loader→extractor→LLM-compiler), wiki page generation with YAML frontmatter and [[wikilinks]], better-sqlite3 FTS5 search index, structural+semantic lint passes with self-healing, and the query engine (index router→page selector→synthesizer with citations).",
+      "model": null,
+      "skills": ["openai-sdk", "gray-matter", "better-sqlite3-fts5", "markdown-generation", "prompt-engineering"],
+      "why": "The wiki-agent pipeline is the core novelty of this project — the thing that differentiates it from a standard RAG benchmark. It requires deep understanding of Karpathy's knowledge compilation approach, careful prompt design for entity/concept extraction, and FTS5 indexing for efficient query routing."
+    },
+    {
+      "key": "benchmark-eval-dev",
+      "description": "Builds the evaluation harness: RAGAS-style metrics (faithfulness, answer relevance, context precision/recall) implemented as LLM-as-Judge prompts, cost/latency tracking, synthetic Q&A generation from corpus documents (single-hop factoid, multi-hop reasoning, comparison questions), benchmark orchestrator calling both systems, and the comparison reporter with per-dimension analysis.",
+      "model": null,
+      "skills": ["evaluation-metrics", "prompt-engineering", "statistical-analysis", "openai-sdk", "benchmark-design"],
+      "why": "The benchmark harness IS the research output — if the metrics are wrong or the evaluation is sloppy, the entire project loses credibility. This role requires understanding RAGAS methodology, LLM-as-Judge rubric design, and proper experimental methodology from the research files."
+    },
+    {
+      "key": "a2a-protocol-dev",
+      "description": "Implements A2A JSON-RPC 2.0 protocol for the wiki-agent (server with agent card, task/message handlers for ingest/lint/query operations), an A2A client for calling the external rag-a2a service, and the HTTP server with static dashboard for viewing benchmark results.",
+      "model": null,
+      "skills": ["json-rpc-2.0", "http-server", "a2a-protocol", "agent-card-spec", "api-design"],
+      "why": "A2A is the integration glue — the benchmark harness calls both wiki-agent and rag-a2a through the same protocol, enabling fair comparison. The wiki-agent must expose the same A2A interface as rag-a2a so the benchmark can treat them identically."
+    },
+    {
+      "key": "test-corpus-dev",
+      "description": "Creates realistic test corpus documents across all 4 categories (technical: API docs and specs; narrative: stories and histories; multi-doc: cross-referencing documents; evolving: docs with version updates), writes comprehensive unit tests with mock providers for every module, and writes E2E tests covering the full ingest→lint→query pipeline and benchmark harness.",
+      "model": null,
+      "skills": ["technical-writing", "test-design", "bun-test", "mock-patterns", "corpus-design"],
+      "why": "A benchmark project is only as good as its test corpus and test coverage. Without realistic, diverse documents the benchmark results are meaningless. Without thorough tests using mock providers, the project can't be developed or CI'd without API keys."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "shared-types-config",
+      "title": "Build shared types, config, and logging infrastructure",
+      "assignedTo": "foundation-dev",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "src/config.ts exports typed config loaded from environment variables (OPENAI_API_KEY, RAG_A2A_URL, WIKI_DIR, CORPUS_DIR, LOG_LEVEL) with sensible defaults",
+        "Shared types exported: WikiPage (title, type, tags, sources, content, wikilinks), Query, Answer (with citations), BenchmarkResult, CorpusDocument",
+        "Pino logger factory creates child loggers with module context; log level configurable via env",
+        "All exports use ESM imports with .ts extensions compatible with Bun runtime",
+        "bun test passes with at least one smoke test verifying config loading and type exports"
+      ]
+    },
+    {
+      "id": "mock-providers",
+      "title": "Implement MockLLM and MockRAGClient providers with factory functions",
+      "assignedTo": "foundation-dev",
+      "dependsOn": ["shared-types-config"],
+      "acceptanceCriteria": [
+        "MockLLM implements the same interface as the real OpenAI wrapper; returns deterministic canned responses based on input patterns (e.g., compile request → mock wiki page, judge request → mock scores)",
+        "MockRAGClient implements A2A client interface; returns stub responses for query tasks with configurable answer content and latency simulation",
+        "Both providers are injectable via factory functions that accept a 'provider' config option ('openai' | 'mock')",
+        "Unit tests prove MockLLM returns consistent outputs across multiple calls with the same input",
+        "Zero external API calls required — verified by running tests with no OPENAI_API_KEY set"
+      ]
+    },
+    {
+      "id": "corpus-loader",
+      "title": "Build corpus document loader with category support",
+      "assignedTo": "foundation-dev",
+      "dependsOn": ["shared-types-config"],
+      "acceptanceCriteria": [
+        "Loads all .md/.txt files from corpus/ recursively, tagging each with its category (technical, narrative, multi-doc, evolving)",
+        "Returns typed CorpusDocument[] with content, metadata, file path, and category",
+        "Handles empty directories gracefully (returns empty array, logs warning)",
+        "Unit test verifies loading from a temp directory with sample files across categories"
+      ]
+    },
+    {
+      "id": "wiki-ingest-pipeline",
+      "title": "Build document ingestion pipeline (loader → extractor → compiler → wiki pages)",
+      "assignedTo": "wiki-compiler-dev",
+      "dependsOn": ["shared-types-config", "mock-providers"],
+      "acceptanceCriteria": [
+        "CLI (src/wiki-agent/ingest/cli.ts) accepts --dir flag pointing to corpus directory",
+        "For each corpus document, LLM extracts entities, concepts, and key facts, then compiles into wiki pages with YAML frontmatter matching the schema (title, type, tags, sources, created, updated)",
+        "Generated pages contain [[WikiLinks]] cross-referencing related entities and concepts; links use Obsidian-compatible format",
+        "Compiled pages are written to wiki/sources/, wiki/entities/, wiki/concepts/ directories; index.md and overview.md are auto-generated",
+        "Unit tests using MockLLM verify the full pipeline produces valid wiki pages with correct frontmatter and wikilinks"
+      ]
+    },
+    {
+      "id": "wiki-fts5-storage",
+      "title": "Implement FTS5 search index and wiki page CRUD with better-sqlite3",
+      "assignedTo": "wiki-compiler-dev",
+      "dependsOn": ["shared-types-config"],
+      "acceptanceCriteria": [
+        "better-sqlite3 database with FTS5 virtual table indexes wiki page title, content, tags, and type",
+        "CRUD operations: createPage, getPage, updatePage, deletePage, searchPages(query) with relevance ranking",
+        "Wikilink resolution: given a [[PageName]], resolves to the actual file path and page metadata",
+        "Re-indexing function rebuilds FTS5 index from wiki/ directory contents (idempotent)",
+        "Unit tests verify FTS5 search returns relevant results for keyword queries and wikilink resolution works for existing and missing pages"
+      ]
+    },
+    {
+      "id": "wiki-lint-query",
+      "title": "Build lint passes (structural + semantic) and query engine with citations",
+      "assignedTo": "wiki-compiler-dev",
+      "dependsOn": ["wiki-ingest-pipeline", "wiki-fts5-storage"],
+      "acceptanceCriteria": [
+        "Structural lint detects: orphan pages (no inbound links), broken [[wikilinks]], missing frontmatter fields, stale pages (sources updated after last compilation)",
+        "Semantic lint uses LLM to detect contradictions between pages and knowledge gaps; produces fix suggestions",
+        "Query engine: routes question via FTS5 index → selects top-K relevant pages → LLM synthesizes answer with [[citations]] back to wiki pages",
+        "Lint CLI (src/wiki-agent/lint/cli.ts) and Query CLI (src/wiki-agent/query/cli.ts) work end-to-end",
+        "Unit tests with MockLLM verify lint catches intentionally broken fixtures and query returns cited answers"
+      ]
+    },
+    {
+      "id": "ragas-metrics",
+      "title": "Implement RAGAS-style metrics and LLM-as-Judge evaluator",
+      "assignedTo": "benchmark-eval-dev",
+      "dependsOn": ["shared-types-config", "mock-providers"],
+      "acceptanceCriteria": [
+        "Implements four RAGAS metrics as LLM-as-Judge prompts: faithfulness (answer grounded in context), answer relevancy (answers the question), context precision (retrieved context is relevant), context recall (relevant context was retrieved)",
+        "LLM-as-Judge evaluator accepts rubric + answer + context + ground-truth, returns 0-1 score per metric with explanation",
+        "Cost tracker records token usage and calculates $/query for each system (compilation amortized over query count)",
+        "Latency tracker records p50/p95/p99 for each system's query response time",
+        "Unit tests with MockLLM verify each metric returns scores in [0,1] range and cost tracker accumulates correctly"
+      ]
+    },
+    {
+      "id": "qa-generation",
+      "title": "Build synthetic Q&A generator and dataset loader",
+      "assignedTo": "benchmark-eval-dev",
+      "dependsOn": ["corpus-loader", "mock-providers"],
+      "acceptanceCriteria": [
+        "Q&A generator takes corpus documents and uses LLM to generate: single-hop factoid questions, multi-hop reasoning questions (requiring 2+ documents), and comparison questions",
+        "Each generated Q&A includes: question, ground-truth answer, source documents, reasoning type tag, difficulty level",
+        "Dataset loader reads/writes Q&A sets as JSON files in src/benchmark/datasets/",
+        "Unit tests with MockLLM verify generator produces well-formed Q&A objects for each question type"
+      ]
+    },
+    {
+      "id": "benchmark-runner",
+      "title": "Build benchmark orchestrator, comparison reporter, and CLI",
+      "assignedTo": "benchmark-eval-dev",
+      "dependsOn": ["ragas-metrics", "qa-generation"],
+      "acceptanceCriteria": [
+        "Benchmark CLI (src/benchmark/cli.ts) loads Q&A dataset, sends each question to both wiki-agent and rag-a2a via A2A, collects answers",
+        "Orchestrator evaluates each answer pair using all metrics (RAGAS, LLM-as-Judge, cost, latency) and stores results in results/run-{timestamp}/",
+        "Reporter (src/benchmark/reporter.ts) generates comparison tables showing per-dimension winners (matching the 8 dimensions from README: single-hop, multi-hop, quality, cost, build-cost, latency, auditability, staleness)",
+        "Results include aggregate scores AND per-question breakdowns in JSON format",
+        "Unit tests with mock providers verify the full benchmark flow produces valid result files"
+      ]
+    },
+    {
+      "id": "a2a-wiki-server",
+      "title": "Build wiki-agent A2A JSON-RPC 2.0 server with agent card",
+      "assignedTo": "a2a-protocol-dev",
+      "dependsOn": ["wiki-lint-query"],
+      "acceptanceCriteria": [
+        "Agent card at /.well-known/agent-card.json describes wiki-agent capabilities (ingest, lint, query skills)",
+        "JSON-RPC 2.0 endpoint handles tasks: tasks/send for submitting queries, tasks/get for retrieving results",
+        "Server binds to configurable port (default 3838) and handles concurrent requests",
+        "Message types map to wiki-agent operations: 'query' messages route to query engine, 'ingest' to ingest pipeline",
+        "Unit tests verify agent card structure and JSON-RPC request/response formatting"
+      ]
+    },
+    {
+      "id": "a2a-rag-client",
+      "title": "Build A2A client for rag-a2a service and HTTP dashboard server",
+      "assignedTo": "a2a-protocol-dev",
+      "dependsOn": ["shared-types-config", "mock-providers"],
+      "acceptanceCriteria": [
+        "A2A client connects to rag-a2a at configurable URL (default localhost:3737), sends query tasks via JSON-RPC 2.0",
+        "Client handles connection errors, timeouts, and malformed responses gracefully with structured error types",
+        "HTTP server (src/server/index.ts) serves static dashboard files from src/server/static/ and exposes /api/results endpoint for benchmark data",
+        "Dashboard displays latest benchmark results with per-dimension comparison (can be minimal HTML+JS)",
+        "Unit tests with MockRAGClient verify client error handling; integration test verifies server starts and serves static files"
+      ]
+    },
+    {
+      "id": "test-corpus-creation",
+      "title": "Create diverse test corpus documents across all 4 categories",
+      "assignedTo": "test-corpus-dev",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "corpus/technical/ contains at least 3 documents: API reference doc, system architecture spec, configuration guide — each 500+ words with structured sections",
+        "corpus/narrative/ contains at least 2 documents: project history narrative, case study — each 400+ words with named entities and temporal references",
+        "corpus/multi-doc/ contains at least 3 documents that explicitly cross-reference each other (shared entities, conflicting claims, complementary details)",
+        "corpus/evolving/ contains at least 2 documents with version markers or update sections simulating document evolution over time",
+        "All documents are realistic enough to generate meaningful benchmark questions (not lorem ipsum)"
+      ]
+    },
+    {
+      "id": "unit-tests",
+      "title": "Write comprehensive unit tests for all modules using mock providers",
+      "assignedTo": "test-corpus-dev",
+      "dependsOn": ["mock-providers", "wiki-lint-query", "ragas-metrics"],
+      "acceptanceCriteria": [
+        "tests/unit/ contains test files for: config, corpus-loader, wiki-page (frontmatter parsing, wikilink extraction), fts5-storage, ingest-pipeline, lint, query-engine, metrics, a2a-protocol",
+        "All tests use MockLLM and MockRAGClient — zero external API calls (verified by CI with no env vars)",
+        "Test coverage includes edge cases: empty corpus, malformed frontmatter, broken wikilinks, missing pages, concurrent queries",
+        "bun test tests/unit passes with all tests green"
+      ]
+    },
+    {
+      "id": "e2e-tests",
+      "title": "Write E2E tests covering full pipeline and benchmark harness",
+      "assignedTo": "test-corpus-dev",
+      "dependsOn": ["unit-tests", "benchmark-runner", "a2a-wiki-server"],
+      "acceptanceCriteria": [
+        "tests/e2e/ contains: pipeline test (ingest corpus → lint → query → verify cited answer), benchmark test (run mini-benchmark with mocks → verify result files generated)",
+        "E2E pipeline test ingests test corpus, runs lint, queries a known question, and verifies the answer references correct source documents",
+        "E2E benchmark test runs both systems (wiki-agent + mock rag-a2a) on a small Q&A set and produces valid results/ output with all metric dimensions",
+        "All E2E tests use mock providers and complete in under 30 seconds",
+        "bun test tests/e2e passes with all tests green"
+      ]
+    }
+  ]
+}
