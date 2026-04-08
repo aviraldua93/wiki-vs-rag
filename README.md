@@ -1,3 +1,5 @@
+<p align="center"><img src="hero.svg" alt="Wiki vs RAG Hero" width="800" /></p>
+
 # wiki-vs-rag
 
 **Head-to-head benchmark: RAG vs Karpathy-style LLM Wiki Knowledge Compilation.**
