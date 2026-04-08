@@ -1,0 +1,227 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="100%" stop-color="#0d1033"/>
+    </linearGradient>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="40%" stop-color="#ef4444"/>
+      <stop offset="60%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="divLine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#ef4444"/>
+      <stop offset="70%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="wikiNodeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="ragNodeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="scanLine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1e293b" stroke-width="0.5" opacity="0.4"/>
+    </pattern>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowRed">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <style>
+      @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+      @keyframes dash-flow { 0% { stroke-dashoffset: 24; } 100% { stroke-dashoffset: 0; } }
+      @keyframes dash-flow-r { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 24; } }
+      @keyframes float-y { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
+      @keyframes float-y2 { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(6px); } }
+      @keyframes scale-pulse { 0%,100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } }
+      @keyframes ripple { 0% { r: 8; opacity: 0.6; } 100% { r: 28; opacity: 0; } }
+      @keyframes scan { 0% { transform: translateY(-200px); opacity: 0; } 10% { opacity: 0.15; } 90% { opacity: 0.15; } 100% { transform: translateY(200px); opacity: 0; } }
+      @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+      @keyframes particle-up { 0% { transform: translateY(0) scale(1); opacity: 0.8; } 100% { transform: translateY(-60px) scale(0); opacity: 0; } }
+      @keyframes glow-breathe { 0%,100% { filter: drop-shadow(0 0 4px #ef4444); } 50% { filter: drop-shadow(0 0 14px #ef4444); } }
+      @keyframes lightning { 0%,20%,100% { opacity: 0.3; } 10% { opacity: 1; } 15% { opacity: 0.6; } }
+      .scan-line { animation: scan 5s ease-in-out infinite; }
+      .pulse1 { animation: pulse 2s ease-in-out infinite; }
+      .pulse2 { animation: pulse 2s ease-in-out 0.5s infinite; }
+      .pulse3 { animation: pulse 2s ease-in-out 1s infinite; }
+      .pulse4 { animation: pulse 2s ease-in-out 1.5s infinite; }
+      .flow-wiki { stroke-dasharray: 6 12; animation: dash-flow 2s linear infinite; }
+      .flow-rag { stroke-dasharray: 6 12; animation: dash-flow-r 2s linear infinite; }
+      .float1 { animation: float-y 3s ease-in-out infinite; }
+      .float2 { animation: float-y2 3.5s ease-in-out 0.3s infinite; }
+      .float3 { animation: float-y 4s ease-in-out 0.7s infinite; }
+      .float4 { animation: float-y2 3s ease-in-out 1s infinite; }
+      .vs-glow { animation: glow-breathe 2s ease-in-out infinite; }
+      .lightning { animation: lightning 3s ease-in-out infinite; }
+      .particle { animation: particle-up 2s ease-out infinite; }
+      .p2 { animation: particle-up 2.5s ease-out 0.4s infinite; }
+      .p3 { animation: particle-up 1.8s ease-out 0.9s infinite; }
+      .p4 { animation: particle-up 2.2s ease-out 1.3s infinite; }
+      .p5 { animation: particle-up 2.8s ease-out 0.2s infinite; }
+      .ripple1 { animation: ripple 3s ease-out infinite; }
+      .ripple2 { animation: ripple 3s ease-out 1s infinite; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="url(#bg)"/>
+  <rect width="800" height="400" fill="url(#grid)"/>
+
+  <!-- Scanning line -->
+  <rect class="scan-line" x="0" y="195" width="800" height="10" fill="url(#scanLine)" opacity="0.12"/>
+
+  <!-- Corner decorations -->
+  <path d="M 20 50 L 20 20 L 50 20" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="0.5"/>
+  <path d="M 750 20 L 780 20 L 780 50" fill="none" stroke="#3b82f6" stroke-width="1.5" opacity="0.5"/>
+  <path d="M 20 350 L 20 380 L 50 380" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="0.5"/>
+  <path d="M 750 380 L 780 380 L 780 350" fill="none" stroke="#3b82f6" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- Title -->
+  <text x="400" y="48" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="30" font-weight="900" letter-spacing="4" fill="url(#titleGrad)" filter="url(#glow)">WIKI VS RAG</text>
+  <text x="400" y="68" text-anchor="middle" font-family="'Courier New',monospace" font-size="10" fill="#94a3b8" letter-spacing="1">Head-to-Head Benchmark: Compiled Knowledge vs Retrieval</text>
+
+  <!-- Center dividing line -->
+  <line x1="400" y1="85" x2="400" y2="365" stroke="url(#divLine)" stroke-width="2" opacity="0.6"/>
+  <line x1="400" y1="85" x2="400" y2="365" stroke="#ef4444" stroke-width="1" stroke-dasharray="4 8" opacity="0.3" class="pulse1"/>
+
+  <!-- VS badge -->
+  <g class="vs-glow">
+    <circle cx="400" cy="155" r="22" fill="#0a0a1a" stroke="#ef4444" stroke-width="2.5" filter="url(#glowRed)"/>
+    <text x="400" y="161" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="16" font-weight="900" fill="#ef4444">VS</text>
+  </g>
+  <!-- Lightning bolts -->
+  <path class="lightning" d="M 393 125 L 397 138 L 392 138 L 396 148" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.5"/>
+  <path class="lightning" d="M 407 125 L 403 138 L 408 138 L 404 148" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.5" style="animation-delay: 0.5s"/>
+  <!-- Ripples around VS -->
+  <circle class="ripple1" cx="400" cy="155" r="8" fill="none" stroke="#ef4444" stroke-width="1"/>
+  <circle class="ripple2" cx="400" cy="155" r="8" fill="none" stroke="#ef4444" stroke-width="0.8"/>
+
+  <!-- ====== LEFT SIDE: WIKI ====== -->
+  <text x="200" y="100" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b" opacity="0.7">WIKI</text>
+  <text x="200" y="112" text-anchor="middle" font-family="monospace" font-size="7" fill="#f59e0b" opacity="0.4">compiled knowledge</text>
+
+  <!-- Wiki knowledge tree - central node -->
+  <circle cx="200" cy="195" r="14" fill="url(#wikiNodeGrad)" stroke="#f59e0b" stroke-width="1.5" filter="url(#glow)" class="pulse1"/>
+  <text x="200" y="198" text-anchor="middle" font-family="monospace" font-size="7" fill="#f59e0b">CORE</text>
+
+  <!-- Wiki branch nodes with connections -->
+  <line class="flow-wiki" x1="200" y1="180" x2="140" y2="150" stroke="#f59e0b" stroke-width="1" opacity="0.5"/>
+  <circle cx="140" cy="150" r="8" fill="#0a0a1a" stroke="#f59e0b" stroke-width="1" class="float1"/>
+  <text x="140" y="153" text-anchor="middle" font-family="monospace" font-size="6" fill="#f59e0b">API</text>
+
+  <line class="flow-wiki" x1="200" y1="180" x2="260" y2="148" stroke="#f59e0b" stroke-width="1" opacity="0.5"/>
+  <circle cx="260" cy="148" r="8" fill="#0a0a1a" stroke="#f59e0b" stroke-width="1" class="float2"/>
+  <text x="260" y="151" text-anchor="middle" font-family="monospace" font-size="6" fill="#f59e0b">ADR</text>
+
+  <line class="flow-wiki" x1="200" y1="210" x2="140" y2="240" stroke="#f59e0b" stroke-width="1" opacity="0.5"/>
+  <circle cx="140" cy="240" r="8" fill="#0a0a1a" stroke="#f59e0b" stroke-width="1" class="float3"/>
+  <text x="140" y="243" text-anchor="middle" font-family="monospace" font-size="6" fill="#f59e0b">OPS</text>
+
+  <line class="flow-wiki" x1="200" y1="210" x2="260" y2="242" stroke="#f59e0b" stroke-width="1" opacity="0.5"/>
+  <circle cx="260" cy="242" r="8" fill="#0a0a1a" stroke="#f59e0b" stroke-width="1" class="float4"/>
+  <text x="260" y="245" text-anchor="middle" font-family="monospace" font-size="6" fill="#f59e0b">DEV</text>
+
+  <!-- Cross-connections in wiki tree -->
+  <line class="flow-wiki" x1="140" y1="150" x2="260" y2="148" stroke="#f59e0b" stroke-width="0.5" opacity="0.25"/>
+  <line class="flow-wiki" x1="140" y1="240" x2="260" y2="242" stroke="#f59e0b" stroke-width="0.5" opacity="0.25"/>
+  <line class="flow-wiki" x1="140" y1="150" x2="140" y2="240" stroke="#f59e0b" stroke-width="0.5" opacity="0.2"/>
+  <line class="flow-wiki" x1="260" y1="148" x2="260" y2="242" stroke="#f59e0b" stroke-width="0.5" opacity="0.2"/>
+
+  <!-- ====== RIGHT SIDE: RAG ====== -->
+  <text x="600" y="100" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#3b82f6" opacity="0.7">RAG</text>
+  <text x="600" y="112" text-anchor="middle" font-family="monospace" font-size="7" fill="#3b82f6" opacity="0.4">retrieval pipeline</text>
+
+  <!-- RAG pipeline: docs → chunks → vectors → search -->
+  <!-- Docs -->
+  <rect x="440" y="155" width="40" height="28" rx="4" fill="#0a0a1a" stroke="#3b82f6" stroke-width="1" class="float1"/>
+  <text x="460" y="167" text-anchor="middle" font-family="monospace" font-size="6" fill="#3b82f6">DOCS</text>
+  <text x="460" y="176" text-anchor="middle" font-family="monospace" font-size="5" fill="#64748b">source</text>
+
+  <!-- Arrow -->
+  <line class="flow-rag" x1="482" y1="170" x2="518" y2="170" stroke="#3b82f6" stroke-width="1" opacity="0.6"/>
+
+  <!-- Chunks -->
+  <rect x="520" y="155" width="40" height="28" rx="4" fill="#0a0a1a" stroke="#3b82f6" stroke-width="1" class="float2"/>
+  <text x="540" y="167" text-anchor="middle" font-family="monospace" font-size="6" fill="#3b82f6">CHUNK</text>
+  <text x="540" y="176" text-anchor="middle" font-family="monospace" font-size="5" fill="#64748b">split</text>
+
+  <!-- Arrow -->
+  <line class="flow-rag" x1="562" y1="170" x2="598" y2="170" stroke="#3b82f6" stroke-width="1" opacity="0.6"/>
+
+  <!-- Vectors -->
+  <rect x="600" y="155" width="40" height="28" rx="4" fill="#0a0a1a" stroke="#06b6d4" stroke-width="1" class="float3"/>
+  <text x="620" y="167" text-anchor="middle" font-family="monospace" font-size="6" fill="#06b6d4">VEC</text>
+  <text x="620" y="176" text-anchor="middle" font-family="monospace" font-size="5" fill="#64748b">embed</text>
+
+  <!-- Arrow -->
+  <line class="flow-rag" x1="642" y1="170" x2="678" y2="170" stroke="#06b6d4" stroke-width="1" opacity="0.6"/>
+
+  <!-- Search -->
+  <rect x="680" y="155" width="40" height="28" rx="4" fill="#0a0a1a" stroke="#22c55e" stroke-width="1" class="float4"/>
+  <text x="700" y="167" text-anchor="middle" font-family="monospace" font-size="6" fill="#22c55e">FIND</text>
+  <text x="700" y="176" text-anchor="middle" font-family="monospace" font-size="5" fill="#64748b">search</text>
+
+  <!-- RAG vertical connector nodes -->
+  <line class="flow-rag" x1="540" y1="185" x2="540" y2="220" stroke="#3b82f6" stroke-width="1" opacity="0.4"/>
+  <circle cx="540" cy="225" r="6" fill="#0a0a1a" stroke="#3b82f6" stroke-width="1" class="pulse2"/>
+  <text x="540" y="228" text-anchor="middle" font-family="monospace" font-size="5" fill="#3b82f6">idx</text>
+
+  <line class="flow-rag" x1="620" y1="185" x2="620" y2="220" stroke="#06b6d4" stroke-width="1" opacity="0.4"/>
+  <circle cx="620" cy="225" r="6" fill="#0a0a1a" stroke="#06b6d4" stroke-width="1" class="pulse3"/>
+  <text x="620" y="228" text-anchor="middle" font-family="monospace" font-size="5" fill="#06b6d4">sim</text>
+
+  <!-- Mini scoreboard panel (center bottom) -->
+  <g class="float1">
+    <rect x="295" y="260" width="210" height="100" rx="6" fill="#0d1117" stroke="#1e293b" stroke-width="1"/>
+    <circle cx="308" cy="271" r="3.5" fill="#ef4444"/>
+    <circle cx="319" cy="271" r="3.5" fill="#f59e0b"/>
+    <circle cx="330" cy="271" r="3.5" fill="#22c55e"/>
+    <text x="400" y="274" text-anchor="middle" font-family="monospace" font-size="7" fill="#475569">benchmark results</text>
+    <line x1="295" y1="280" x2="505" y2="280" stroke="#1e293b" stroke-width="0.5"/>
+    <!-- Scoreboard content -->
+    <text x="310" y="295" font-family="monospace" font-size="8" fill="#94a3b8">Metric</text>
+    <text x="395" y="295" text-anchor="middle" font-family="monospace" font-size="8" fill="#f59e0b">Wiki</text>
+    <text x="470" y="295" text-anchor="middle" font-family="monospace" font-size="8" fill="#3b82f6">RAG</text>
+    <line x1="300" y1="300" x2="500" y2="300" stroke="#1e293b" stroke-width="0.3"/>
+    <text x="310" y="312" font-family="monospace" font-size="7.5" fill="#64748b">Accuracy</text>
+    <text x="395" y="312" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#22c55e" class="pulse1">94.2%</text>
+    <text x="470" y="312" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#64748b">87.1%</text>
+    <text x="310" y="324" font-family="monospace" font-size="7.5" fill="#64748b">Latency</text>
+    <text x="395" y="324" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#22c55e" class="pulse2">12ms</text>
+    <text x="470" y="324" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#64748b">340ms</text>
+    <text x="310" y="336" font-family="monospace" font-size="7.5" fill="#64748b">Coverage</text>
+    <text x="395" y="336" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#64748b">72.0%</text>
+    <text x="470" y="336" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#22c55e" class="pulse3">91.5%</text>
+    <text x="310" y="348" font-family="monospace" font-size="7.5" fill="#64748b">Freshness</text>
+    <text x="395" y="348" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#64748b">manual</text>
+    <text x="470" y="348" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#22c55e" class="pulse4">auto</text>
+  </g>
+
+  <!-- Rising particles (left amber, right blue) -->
+  <circle class="particle" cx="150" cy="280" r="1.5" fill="#f59e0b"/>
+  <circle class="p2" cx="220" cy="260" r="1" fill="#f59e0b"/>
+  <circle class="p3" cx="100" cy="275" r="1.2" fill="#f59e0b"/>
+  <circle class="p4" cx="580" cy="270" r="1.5" fill="#3b82f6"/>
+  <circle class="p5" cx="650" cy="265" r="1" fill="#3b82f6"/>
+  <circle class="particle" cx="710" cy="280" r="1.2" fill="#06b6d4"/>
+
+  <!-- Status bar -->
+  <rect x="0" y="375" width="800" height="25" fill="#080818" opacity="0.9"/>
+  <line x1="0" y1="375" x2="800" y2="375" stroke="#1e293b" stroke-width="0.5"/>
+  <circle cx="20" cy="388" r="3" fill="#22c55e" class="pulse1"/>
+  <text x="30" y="391" font-family="'Courier New',monospace" font-size="9" fill="#64748b">a2a protocol · 265+ tests · karpathy method</text>
+  <text x="760" y="391" text-anchor="end" font-family="'Courier New',monospace" font-size="9" fill="#475569">v1.0.0</text>
+</svg>
