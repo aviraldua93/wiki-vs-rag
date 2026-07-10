@@ -123,7 +123,7 @@ Both systems expose A2A interfaces:
 | Wiki search | FTS5 (SQLite) |
 | RAG integration | A2A protocol → rag-a2a |
 | Evaluation | RAGAS + LLM-as-Judge |
-| Testing | Bun test + Playwright |
+| Testing | Bun test |
 
 ## Known Limitations (Karpathy Method)
 
@@ -149,6 +149,15 @@ This benchmark measures these trade-offs quantitatively against RAG.
 | [rag-a2a](https://github.com/aviraldua93/rag-a2a) | Agent Knowledge & Retrieval |
 | [agent-traps-lab](https://github.com/aviraldua93/agent-traps-lab) | Adversarial Testing |
 | **wiki-vs-rag** | **Paradigm Evaluation** |
+
+## Tests
+
+```bash
+bun test            # full suite (unit + e2e)
+bun run test:unit   # unit tests only
+```
+
+All tests use mock providers, so no OpenAI key or Docker is required to run them.
 
 ## License
 

@@ -20,13 +20,10 @@
     "pino": "^9.6.0",
     "sonic-boom": "^4.2.0",
     "uuid": "^11.1.0",
-    "better-sqlite3": "^11.7.0",
-    "gray-matter": "^4.0.3",
-    "glob": "^11.0.0"
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "@types/bun": "^1.2.0",
-    "@types/better-sqlite3": "^7.6.12",
     "@types/uuid": "^10.0.0",
     "typescript": "^5.7.0"
   },
